@@ -1,0 +1,1 @@
+<h1>Welcome to Dashboard, <?php echo $_SESSION['user_name']; ?>!</h1>
