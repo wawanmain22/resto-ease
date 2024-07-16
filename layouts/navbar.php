@@ -11,7 +11,7 @@
         <li class="dropdown"><a href="#" data-toggle="dropdown"
                 class="nav-link dropdown-toggle nav-link-lg nav-link-user">
                 <img alt="image" src="assets/img/user.png" class="user-img-radious-style">
-                <span class="d-sm-none d-lg-inline-block">Hi, <?php echo $_SESSION['user_name']; ?></span></a>
+            </a>
             <div class="dropdown-menu dropdown-menu-right pullDown">
                 <div class="dropdown-title">Hello <?php echo $_SESSION['user_name']; ?></div>
                 <a href="profile.html" class="dropdown-item has-icon"><i class="far fa-user"></i> Profile</a>
