@@ -6,8 +6,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM User WHERE email = '$email' AND password = '$password'";
-    $result = $conn->query($sql);
+    // Gunakan prepared statements untuk keamanan
+    $sql = "SELECT id, nama, jabatan FROM User WHERE email = ? AND password = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('ss', $email, $password);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
@@ -18,4 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         echo "Email atau Password salah";
     }
+
+    $stmt->close();
+    $conn->close();
 }
