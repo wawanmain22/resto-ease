@@ -1,6 +1,7 @@
 <?php
 session_start();
 include ('proses_connect_database.php');
+$response = array('success' => false, 'message' => 'Terjadi kesalahan yang tidak diketahui');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
@@ -18,11 +19,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['user_id'] = $row['id'];
         $_SESSION['user_name'] = $row['nama'];
         $_SESSION['user_jabatan'] = $row['jabatan'];
-        header("Location: ../dashboard.php");
+        $response['success'] = true;
     } else {
-        echo "Email atau Password salah";
+        $response['message'] = "Email atau Password salah";
     }
 
     $stmt->close();
     $conn->close();
 }
+
+header('Content-Type: application/json');
+echo json_encode($response);

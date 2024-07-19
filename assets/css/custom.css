@@ -13,3 +13,8 @@
 .invalid-feedback .fas {
   margin-right: 5px;
 }
+
+.sidebar-menu .dropdown.active > a {
+  background-color: #f4f4f4; /* Warna latar belakang yang lebih terang */
+  color: #333; /* Warna teks yang lebih gelap */
+}
