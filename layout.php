@@ -21,6 +21,10 @@ if (!isset($_SESSION['user_id'])) {
     <link rel='shortcut icon' type='image/x-icon' href='assets/img/favicon.ico' />
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="assets/bundles/datatables/datatables.min.css">
+    <link rel="stylesheet" href="assets/bundles/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css">
+
 </head>
 
 <body>
@@ -47,15 +51,29 @@ if (!isset($_SESSION['user_id'])) {
     <?php include ('menu_modals.php'); ?>
     <?php include ('pemesanan_modals.php'); ?>
 
-
     <!-- General JS Scripts -->
     <script src="assets/js/app.min.js"></script>
+    <script src="assets/js/custom.js"></script>
+    <!-- DataTables JS -->
+    <script src="assets/bundles/datatables/datatables.min.js"></script>
+    <script src="assets/bundles/datatables/DataTables-1.10.16/js/dataTables.bootstrap4.min.js"></script>
+    <script src="assets/bundles/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Page Specific JS File -->
+    <script src="assets/js/page/datatables.js"></script>
     <script src="assets/js/scripts.js"></script>
     <script src="assets/js/custom.js"></script>
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Include SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#table-1').DataTable({
+                destroy: true
+            });
+        });
+    </script>
 
 </body>
 
