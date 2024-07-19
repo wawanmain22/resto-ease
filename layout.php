@@ -50,6 +50,7 @@ if (!isset($_SESSION['user_id'])) {
     <?php include ('user_modals.php'); ?>
     <?php include ('menu_modals.php'); ?>
     <?php include ('pemesanan_modals.php'); ?>
+    <?php include ('transaksi_modals.php'); ?>
 
     <!-- General JS Scripts -->
     <script src="assets/js/app.min.js"></script>

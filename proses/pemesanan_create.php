@@ -11,16 +11,10 @@ try {
         $total_bayar = $_POST['total_bayar'];
         $menu_pesanan = json_decode($_POST['menu_pesanan'], true);
         $id_user = $_SESSION['user_id'];
-
-        // Generate no_pesanan
-        $tgl_pesan = date("Y-m-d H:i:s");
-        $date_part = date("dmy");
-        $sql = "SELECT COUNT(*) as count FROM Pemesanan WHERE DATE(tgl_pesan) = CURDATE()";
-        $result = $conn->query($sql);
-        $count = $result->fetch_assoc()['count'] + 1;
-        $no_pesanan = $date_part . str_pad($count, 3, '0', STR_PAD_LEFT);
+        $no_pesanan = $_POST['no_pesanan'];
 
         // Insert into Pemesanan table
+        $tgl_pesan = date("Y-m-d H:i:s");
         $sql = "INSERT INTO Pemesanan (no_pesanan, total_bayar, tgl_pesan, nama_pemesan, nomor_meja, id_user) 
                 VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
@@ -75,4 +69,3 @@ $conn->close();
 
 header('Content-Type: application/json');
 echo json_encode($response);
-?>
