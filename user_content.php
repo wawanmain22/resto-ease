@@ -1,5 +1,5 @@
 <?php
-include ('proses/proses_connect_database.php');
+include('proses/proses_connect_database.php');
 
 // Fetch users
 $sql = "SELECT * FROM User";
@@ -14,11 +14,23 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
                 <h4>Data User</h4>
             </div>
             <div class="card-body">
-                <button type="button" class="btn btn-primary mb-3" data-toggle="modal" data-target="#addUserModal">
-                    Tambah Data
-                </button>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addUserModal">
+                            Tambah Data
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Cari user...">
+                            <div class="input-group-append">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-striped" id="table-1">
+                    <table class="table table-striped" id="userTable">
                         <thead>
                             <tr>
                                 <th class="text-center">Index</th>
@@ -33,36 +45,31 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
                         <tbody>
                             <?php foreach ($users as $index => $user): ?>
                             <tr>
-                                <td class="text-center">
-                                    <?= $index + 1 ?>
-                                </td>
-                                <td>
-                                    <?= $user['nama'] ?>
-                                </td>
-                                <td>
-                                    <?= $user['email'] ?>
-                                </td>
-                                <td>
-                                    <?= $user['jabatan'] ?>
-                                </td>
+                                <td class="text-center"><?= $index + 1 ?></td>
+                                <td><?= $user['nama'] ?></td>
+                                <td><?= $user['email'] ?></td>
+                                <td><?= $user['jabatan'] ?></td>
                                 <td><?= $user['no_hp'] ?></td>
                                 <td><?= $user['alamat'] ?></td>
                                 <td>
-                                    <a href="#" class="btn btn-icon btn-info" data-toggle="modal"
-                                        data-target="#detailUserModal" data-id="<?= $user['id'] ?>"><i
-                                            class="fas fa-info-circle"></i></a>
-                                    <a href="#" class="btn btn-icon btn-primary" data-toggle="modal"
-                                        data-target="#editUserModal" data-id="<?= $user['id'] ?>"><i
-                                            class="far fa-edit"></i></a>
-                                    <a href="proses/user_delete.php?id=<?= $user['id'] ?>"
-                                        class=" btn btn-icon btn-danger" data-id="<?= $user['id'] ?>"><i
-                                            class="fas fa-times"></i></a>
+                                    <button class="btn btn-icon btn-info detail-btn" data-id="<?= $user['id'] ?>">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-primary edit-btn" data-id="<?= $user['id'] ?>">
+                                        <i class="far fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-danger delete-btn" data-id="<?= $user['id'] ?>">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center" id="pagination"></ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -70,198 +77,254 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Implementasikan DataTables tanpa jQuery
-    if (typeof DataTable === 'function') {
-        new DataTable('#table-1');
+    const table = document.getElementById('userTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const itemsPerPage = 10;
+    let currentPage = 1;
+    let filteredRows = rows;
+
+    // Fungsi untuk menampilkan halaman tertentu
+    function showPage(page) {
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        filteredRows.forEach((row, index) => {
+            row.style.display = (index >= start && index < end) ? '' : 'none';
+        });
     }
 
-    // Event untuk edit modal
-    document.querySelectorAll('[data-target="#editUserModal"]').forEach(button => {
-        button.addEventListener('click', function(event) {
-            let id = button.getAttribute('data-id');
-            console.log('Edit modal ID:', id); // Log ID untuk debugging
+    // Fungsi untuk membuat pagination
+    function setupPagination() {
+        const pageCount = Math.ceil(filteredRows.length / itemsPerPage);
+        const paginationElement = document.getElementById('pagination');
+        paginationElement.innerHTML = '';
 
-            fetch('proses/user_read.php?id=' + id)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Edit modal data:', data); // Log data untuk debugging
-                    if (data.success) {
-                        document.querySelector('#editId').value = id; // Ensure ID is set
-                        document.querySelector('#editEmail').value = data.email;
-                        document.querySelector('#editNama').value = data.nama;
-                        document.querySelector('#editJabatan').value = data.jabatan;
-                        document.querySelector('#editNoHP').value = data.no_hp;
-                        document.querySelector('#editAlamat').value = data.alamat;
-                        // Clear the password field
-                        document.querySelector('#editPassword').value = '';
-                    } else {
-                        console.error('Error:', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                });
-        });
-    });
-
-    // Event untuk detail modal
-    document.querySelectorAll('[data-target="#detailUserModal"]').forEach(button => {
-        button.addEventListener('click', function(event) {
-            let id = button.getAttribute('data-id');
-            console.log('Detail modal ID:', id); // Log ID untuk debugging
-
-            fetch('proses/user_read.php?id=' + id)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Detail modal data:', data); // Log data untuk debugging
-                    if (data.success) {
-                        document.querySelector('#detailEmail').value = data.email;
-                        document.querySelector('#detailNama').value = data.nama;
-                        document.querySelector('#detailJabatan').value = data.jabatan;
-                        document.querySelector('#detailNoHP').value = data.no_hp;
-                        document.querySelector('#detailAlamat').value = data.alamat;
-                    } else {
-                        console.error('Error:', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                });
-        });
-    });
-
-    document.querySelector('#addUserForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        let formData = new FormData(this);
-
-        fetch(this.getAttribute('action'), {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(response => {
-                // Reset error messages
-                const emailInput = document.querySelector('#email');
-                const emailError = document.querySelector('#emailError');
-                const errorText = document.querySelector('#emailError .error-text');
-                emailInput.classList.remove('is-invalid');
-                emailError.style.display = 'none';
-                errorText.innerText = '';
-
-                if (response.success) {
-                    toastr.success(response.message);
-                    $('#addUserModal').modal('hide'); // Tutup modal setelah notifikasi sukses
-                    setTimeout(() => location.reload(), 1000); // Tunggu 1 detik sebelum refresh
-                } else {
-                    if (response.message.includes('Email')) {
-                        errorText.innerText = response.message;
-                        emailError.style.display = 'block';
-                        emailInput.classList.add('is-invalid');
-                    } else {
-                        toastr.error(response.message);
-                    }
-                }
-            })
-            .catch(error => {
-                toastr.error('Terjadi kesalahan saat memproses data');
-                console.error('Fetch error:', error);
+        for (let i = 1; i <= pageCount; i++) {
+            const li = document.createElement('li');
+            li.className = 'page-item' + (i === currentPage ? ' active' : '');
+            const a = document.createElement('a');
+            a.className = 'page-link';
+            a.href = '#';
+            a.textContent = i;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentPage = i;
+                showPage(currentPage);
+                updatePaginationButtons();
             });
-    });
-
-    document.querySelector('#editUserForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        let formData = new FormData(this);
-
-        // Debugging: log data yang akan dikirim
-        for (let [key, value] of formData.entries()) {
-            console.log(key, value);
+            li.appendChild(a);
+            paginationElement.appendChild(li);
         }
+    }
 
-        fetch(this.getAttribute('action'), {
-                method: 'POST',
-                body: formData
-            })
+    // Fungsi untuk update tampilan tombol pagination
+    function updatePaginationButtons() {
+        const buttons = document.querySelectorAll('.pagination .page-item');
+        buttons.forEach((button, index) => {
+            button.classList.toggle('active', index + 1 === currentPage);
+        });
+    }
+
+    // Fungsi pencarian yang diperbaiki
+    function searchTable() {
+        const searchInput = document.getElementById('searchInput');
+        const filter = searchInput.value.toLowerCase();
+
+        filteredRows = rows.filter(row => {
+            const text = row.textContent.toLowerCase();
+            return text.includes(filter);
+        });
+
+        // Sembunyikan semua baris
+        rows.forEach(row => row.style.display = 'none');
+
+        // Tampilkan dan perbarui indeks hanya untuk baris yang cocok
+        filteredRows.forEach((row, index) => {
+            row.style.display = '';
+            row.cells[0].textContent = index + 1;
+        });
+
+        currentPage = 1;
+        setupPagination();
+        showPage(currentPage);
+    }
+
+    // Event listener untuk input pencarian
+    document.getElementById('searchInput').addEventListener('input', searchTable);
+
+    // Setup pagination awal
+    setupPagination();
+    showPage(currentPage);
+
+    // Fungsi untuk menangani klik tombol detail
+    function handleDetailClick(id) {
+        console.log('Detail clicked for ID:', id);
+        fetch('proses/user_read.php?id=' + id)
             .then(response => response.json())
-            .then(response => {
-                // Reset error messages
-                const emailInput = document.querySelector('#editEmail');
-                const emailError = document.querySelector('#editEmailError');
-                const errorText = document.querySelector('#editEmailError .error-text');
-                emailInput.classList.remove('is-invalid');
-                emailError.style.display = 'none';
-                errorText.innerText = '';
-
-                if (response.success) {
-                    toastr.success(response.message);
-                    $('#editUserModal').modal('hide'); // Tutup modal setelah notifikasi sukses
-                    setTimeout(() => location.reload(), 1000); // Tunggu 1 detik sebelum refresh
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('#detailEmail').value = data.email;
+                    document.querySelector('#detailNama').value = data.nama;
+                    document.querySelector('#detailJabatan').value = data.jabatan;
+                    document.querySelector('#detailNoHP').value = data.no_hp;
+                    document.querySelector('#detailAlamat').value = data.alamat;
+                    $('#detailUserModal').modal('show');
                 } else {
-                    if (response.message.includes('Email')) {
-                        errorText.innerText = response.message;
-                        emailError.style.display = 'block';
-                        emailInput.classList.add('is-invalid');
-                    } else {
-                        toastr.error(response.message);
-                    }
-                    console.error('Error:', response.message); // Log error ke konsol
+                    Swal.fire('Error', data.message, 'error');
                 }
             })
             .catch(error => {
-                toastr.error('Terjadi kesalahan saat memproses data');
-                console.error('Fetch error:', error); // Log fetch error ke konsol
+                console.error('Error:', error);
+                Swal.fire('Error', 'Terjadi kesalahan saat memuat data', 'error');
             });
-    });
+    }
 
-    // Event untuk delete
-    document.querySelectorAll('.btn-danger').forEach(button => {
-        button.addEventListener('click', function(event) {
-            event.preventDefault();
-            let id = button.getAttribute('data-id');
-            let url = button.getAttribute('href');
+    // Fungsi untuk menangani klik tombol edit
+    function handleEditClick(id) {
+        console.log('Edit clicked for ID:', id);
+        fetch('proses/user_read.php?id=' + id)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('#editId').value = id;
+                    document.querySelector('#editEmail').value = data.email;
+                    document.querySelector('#editNama').value = data.nama;
+                    document.querySelector('#editJabatan').value = data.jabatan;
+                    document.querySelector('#editNoHP').value = data.no_hp;
+                    document.querySelector('#editAlamat').value = data.alamat;
+                    document.querySelector('#editPassword').value = '';
+                    $('#editUserModal').modal('show');
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Terjadi kesalahan saat memuat data', 'error');
+            });
+    }
 
-            Swal.fire({
-                title: 'Apakah anda yakin?',
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(url, {
-                            method: 'GET'
-                        })
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.success) {
-                                Swal.fire(
-                                    'Deleted!',
-                                    'Data telah dihapus.',
-                                    'success'
-                                );
-                                setTimeout(() => location.reload(),
-                                1000); // Tunggu 1 detik sebelum refresh
-                            } else {
-                                Swal.fire(
-                                    'Error!',
-                                    'Terjadi kesalahan saat menghapus data.',
-                                    'error'
-                                );
-                            }
-                        })
-                        .catch(error => {
+    // Fungsi untuk menangani klik tombol delete
+    function handleDeleteClick(id) {
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('proses/user_delete.php?id=' + id)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire(
+                                'Terhapus!',
+                                'User berhasil dihapus.',
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
                             Swal.fire(
                                 'Error!',
-                                'Terjadi kesalahan saat memproses data.',
+                                'Terjadi kesalahan: ' + data.message,
                                 'error'
                             );
-                            console.error('Fetch error:',
-                            error); // Log fetch error ke konsol
-                        });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'Terjadi kesalahan saat menghapus data',
+                            'error'
+                        );
+                    });
+            }
+        });
+    }
+
+    // Attach event listeners to action buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.detail-btn')) {
+            handleDetailClick(e.target.closest('.detail-btn').dataset.id);
+        } else if (e.target.closest('.edit-btn')) {
+            handleEditClick(e.target.closest('.edit-btn').dataset.id);
+        } else if (e.target.closest('.delete-btn')) {
+            handleDeleteClick(e.target.closest('.delete-btn').dataset.id);
+        }
+    });
+
+    // Form tambah user
+    const addUserForm = document.querySelector('#addUserForm');
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+
+            fetch(this.getAttribute('action'), {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    Swal.fire('Sukses', response.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    if (response.message.includes('Email')) {
+                        document.querySelector('#emailError .error-text').textContent = response.message;
+                        document.querySelector('#emailError').style.display = 'block';
+                        document.querySelector('#email').classList.add('is-invalid');
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Terjadi kesalahan saat memproses data', 'error');
             });
         });
-    });
+    }
+
+    // Form edit user
+    const editUserForm = document.querySelector('#editUserForm');
+    if (editUserForm) {
+        editUserForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+
+            fetch(this.getAttribute('action'), {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(response => {
+                if (response.success) {
+                    Swal.fire('Sukses', response.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    if (response.message.includes('Email')) {
+                        document.querySelector('#editEmailError .error-text').textContent = response.message;
+                        document.querySelector('#editEmailError').style.display = 'block';
+                        document.querySelector('#editEmail').classList.add('is-invalid');
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Terjadi kesalahan saat memproses data', 'error');
+            });
+        });
+    }
 });
 </script>

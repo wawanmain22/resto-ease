@@ -13,7 +13,7 @@
                 <img alt="image" src="assets/img/user.png" class="user-img-radious-style">
             </a>
             <div class="dropdown-menu dropdown-menu-right pullDown">
-                <div class="dropdown-title">Hello <?php echo $_SESSION['user_name']; ?></div>
+                <div class="dropdown-title" id="navbarUserName">Hello <?php echo htmlspecialchars($_SESSION['user_name']); ?></div>
                 <a href="profile.php" class="dropdown-item has-icon"><i class="far fa-user"></i> Profile</a>
                 <div class="dropdown-divider"></div>
                 <a href="proses/proses_logout.php" class="dropdown-item has-icon text-danger"><i
@@ -22,3 +22,15 @@
         </li>
     </ul>
 </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const storedName = localStorage.getItem('user_name');
+    if (storedName) {
+        const navbarUserName = document.getElementById('navbarUserName');
+        if (navbarUserName) {
+            navbarUserName.textContent = 'Hello ' + storedName;
+        }
+    }
+});
+</script>

@@ -18,35 +18,35 @@ $stmt->close();
                 <h4>Profile</h4>
             </div>
             <div class="card-body">
-                <form id="profileForm" method="POST" action="proses/profile_update.php">
+                <form id="profileUpdateForm" method="POST" action="proses/profile_update.php">
                     <div class="form-group">
-                        <label for="nama">Nama</label>
-                        <input type="text" class="form-control" id="nama" name="nama"
+                        <label for="profile_nama">Nama</label>
+                        <input type="text" class="form-control" id="profile_nama" name="nama"
                             value="<?= htmlspecialchars($user['nama']) ?>" required>
                     </div>
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email"
+                        <label for="profile_email">Email</label>
+                        <input type="email" class="form-control" id="profile_email"
                             value="<?= htmlspecialchars($user['email']) ?>" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password">
+                        <label for="profile_password">Password</label>
+                        <input type="password" class="form-control" id="profile_password" name="password">
                         <small class="form-text text-muted">Kosongkan jika tidak ingin mengganti password</small>
                     </div>
                     <div class="form-group">
-                        <label for="no_hp">Nomor HP</label>
-                        <input type="text" class="form-control" id="no_hp" name="no_hp"
+                        <label for="profile_no_hp">Nomor HP</label>
+                        <input type="text" class="form-control" id="profile_no_hp" name="no_hp"
                             value="<?= htmlspecialchars($user['no_hp']) ?>" required>
                     </div>
                     <div class="form-group">
-                        <label for="alamat">Alamat</label>
-                        <textarea class="form-control" id="alamat" name="alamat"
+                        <label for="profile_alamat">Alamat</label>
+                        <textarea class="form-control" id="profile_alamat" name="alamat"
                             required><?= htmlspecialchars($user['alamat']) ?></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="jabatan">Jabatan</label>
-                        <input type="text" class="form-control" id="jabatan"
+                        <label for="profile_jabatan">Jabatan</label>
+                        <input type="text" class="form-control" id="profile_jabatan"
                             value="<?= htmlspecialchars($user['jabatan']) ?>" readonly>
                     </div>
                     <button type="submit" class="btn btn-primary">Update Profile</button>
@@ -58,7 +58,7 @@ $stmt->close();
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('profileForm').addEventListener('submit', function(event) {
+    document.getElementById('profileUpdateForm').addEventListener('submit', function(event) {
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
@@ -71,9 +71,18 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     toastr.success(data.message);
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000); // Reload halaman setelah 1 detik
+
+                    // Update navbar username
+                    const navbarUserName = document.getElementById('navbarUserName');
+                    if (navbarUserName) {
+                        navbarUserName.textContent = 'Hello ' + data.new_name;
+                    }
+
+                    // Update localStorage
+                    localStorage.setItem('user_name', data.new_name);
+
+                    // Update the form field
+                    document.getElementById('profile_nama').value = data.new_name;
                 } else {
                     toastr.error(data.message);
                 }

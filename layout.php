@@ -68,6 +68,7 @@ if (!isset($_SESSION['user_id'])) {
     <!-- Include SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
     <script>
         $(document).ready(function () {
             $('#table-1').DataTable({

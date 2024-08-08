@@ -23,8 +23,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if ($stmt->execute()) {
+        $_SESSION['user_name'] = $nama; // Update session with new name
         $response['success'] = true;
         $response['message'] = 'Profil berhasil diperbarui';
+        $response['new_name'] = $nama; // Send new name back to client
     } else {
         $response['message'] = 'Gagal memperbarui profil: ' . $stmt->error;
     }
@@ -36,3 +38,4 @@ $conn->close();
 
 header('Content-Type: application/json');
 echo json_encode($response);
+?>

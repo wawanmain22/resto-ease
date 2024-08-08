@@ -1,5 +1,5 @@
 <?php
-include ('proses/proses_connect_database.php');
+include('proses/proses_connect_database.php');
 
 // Fetch menus
 $sql = "SELECT * FROM Menu";
@@ -27,8 +27,21 @@ $menus = $result->fetch_all(MYSQLI_ASSOC);
                         data-target="#invoiceModal" disabled>
                         Tambah Data Pemesanan
                     </button>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <!-- Anda bisa menambahkan tombol atau fitur lain di sini jika diperlukan -->
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Cari menu...">
+                                <div class="input-group-append">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-striped" id="table-1">
+                        <table class="table table-striped" id="menuTable">
                             <thead>
                                 <tr>
                                     <th class="text-center">Index</th>
@@ -58,6 +71,9 @@ $menus = $result->fetch_all(MYSQLI_ASSOC);
                             </tbody>
                         </table>
                     </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center" id="pagination"></ul>
+                    </nav>
                 </form>
             </div>
         </div>
@@ -74,6 +90,13 @@ $menus = $result->fetch_all(MYSQLI_ASSOC);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const menus = <?= json_encode($menus) ?>;
+    const table = document.getElementById('menuTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const itemsPerPage = 10;
+    let currentPage = 1;
+    let filteredRows = rows;
+
     const jumlahElements = document.querySelectorAll('.jumlah');
     const hargaElements = document.querySelectorAll('.harga');
     const stokElements = document.querySelectorAll('.stok');
@@ -87,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fungsi untuk memformat harga tanpa desimal
     function formatHarga(harga) {
-        return 'RP. ' + parseInt(harga).toLocaleString();
+        return 'Rp ' + parseInt(harga).toLocaleString('id-ID');
     }
 
     // Format harga di tabel
@@ -95,10 +118,77 @@ document.addEventListener('DOMContentLoaded', function() {
         element.textContent = formatHarga(element.textContent);
     });
 
-    // Inisialisasi DataTable
-    $('#table-1').DataTable({
-        destroy: true // Memastikan tabel dapat diinisialisasi ulang jika diperlukan
-    });
+    // Fungsi untuk menampilkan halaman tertentu
+    function showPage(page) {
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        filteredRows.forEach((row, index) => {
+            row.style.display = (index >= start && index < end) ? '' : 'none';
+        });
+    }
+
+    // Fungsi untuk membuat pagination
+    function setupPagination() {
+        const pageCount = Math.ceil(filteredRows.length / itemsPerPage);
+        const paginationElement = document.getElementById('pagination');
+        paginationElement.innerHTML = '';
+
+        for (let i = 1; i <= pageCount; i++) {
+            const li = document.createElement('li');
+            li.className = 'page-item' + (i === currentPage ? ' active' : '');
+            const a = document.createElement('a');
+            a.className = 'page-link';
+            a.href = '#';
+            a.textContent = i;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentPage = i;
+                showPage(currentPage);
+                updatePaginationButtons();
+            });
+            li.appendChild(a);
+            paginationElement.appendChild(li);
+        }
+    }
+
+    // Fungsi untuk update tampilan tombol pagination
+    function updatePaginationButtons() {
+        const buttons = document.querySelectorAll('.pagination .page-item');
+        buttons.forEach((button, index) => {
+            button.classList.toggle('active', index + 1 === currentPage);
+        });
+    }
+
+    // Fungsi pencarian yang diperbaiki
+    function searchTable() {
+        const searchInput = document.getElementById('searchInput');
+        const filter = searchInput.value.toLowerCase();
+
+        filteredRows = rows.filter(row => {
+            const text = row.textContent.toLowerCase();
+            return text.includes(filter);
+        });
+
+        // Sembunyikan semua baris
+        rows.forEach(row => row.style.display = 'none');
+
+        // Tampilkan dan perbarui indeks hanya untuk baris yang cocok
+        filteredRows.forEach((row, index) => {
+            row.style.display = '';
+            row.cells[0].textContent = index + 1;
+        });
+
+        currentPage = 1;
+        setupPagination();
+        showPage(currentPage);
+    }
+
+    // Event listener untuk input pencarian
+    document.getElementById('searchInput').addEventListener('input', searchTable);
+
+    // Setup pagination awal
+    setupPagination();
+    showPage(currentPage);
 
     namaPemesanInput.addEventListener('input', toggleTambahDataPesananButton);
     nomorMejaInput.addEventListener('input', toggleTambahDataPesananButton);
@@ -270,25 +360,47 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(data); // Add this line to log the data being sent
 
         fetch('proses/pemesanan_create.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams(data)
-            })
-            .then(response => response.json())
-            .then(response => {
-                if (response.success) {
-                    toastr.success(response.message);
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    toastr.error(response.message);
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                toastr.error('Terjadi kesalahan saat memproses data');
-            });
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams(data)
+    })
+    .then(response => response.json())
+    .then(response => {
+        if (response.success) {
+            toastr.success(response.message);
+            $('#invoiceModal').modal('hide');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            toastr.error(response.message);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        toastr.error('Terjadi kesalahan saat memproses data');
     });
+});
+
+// Inisialisasi toastr
+toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": false,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut"
+};
 });
 </script>
